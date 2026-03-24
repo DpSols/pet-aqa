@@ -1,0 +1,76 @@
+stages:
+  - lint
+  - api-tests
+  - web-tests
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
+
+.base:
+  cache:
+    key:
+      files: [pyproject.toml]
+    paths: [.pip-cache/]
+
+lint:
+  stage: lint
+  extends: .base
+  image: python:3.14-slim
+  before_script:
+    - pip install -r requirements-dev.txt
+  script:
+    - ruff check .
+    - mypy src/ core/ infrastructure/ --ignore-missing-imports
+  allow_failure: false
+
+api-tests:
+  stage: api-tests
+  extends: .base
+  image: python:3.14-slim
+  services:
+    - name: confluentinc/cp-kafka:7.6.1
+      alias: kafka
+      variables:
+        KAFKA_NODE_ID: 1
+        KAFKA_PROCESS_ROLES: broker,controller
+        KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+        KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+        KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+        KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+        KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+        KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+        CLUSTER_ID: MkU3OEVCNTcwNTJENDM2Qk
+    - name: postgres:16
+      alias: postgres
+      variables:
+        POSTGRES_DB: testdb
+        POSTGRES_USER: testuser
+        POSTGRES_PASSWORD: testpass
+  variables:
+    ENV_FILE: config/environments/ci.env
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends libpq-dev
+    - pip install -r requirements.txt
+  script:
+    - pytest tests/api/ -m api -n auto --alluredir=allure-results -v
+  artifacts:
+    paths: [allure-results/]
+    when: always
+  timeout: 15 minutes
+
+web-tests:
+  stage: web-tests
+  extends: .base
+  image: mcr.microsoft.com/playwright/python:v1.50.0-jammy
+  variables:
+    ENV_FILE: config/environments/ci.env
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - pytest tests/web/ -m web -n 2 --alluredir=allure-results -v
+  artifacts:
+    paths: [allure-results/, playwright-videos/]
+    when: always
+  timeout: 20 minutes

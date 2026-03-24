@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pet-automation"
+version = "0.1.0"
+description = "Multi-platform automation testing framework demonstrating architectural best practices"
+requires-python = ">=3.14"
+authors = [{name = "Nodirbek", email = "nodir.jadev@gmail.com"}]
+dependencies = [
+    "requests>=2.32",
+    "playwright>=1.50",
+    "appium-python-client>=4.3",
+    "pytest>=8.3",
+    "pytest-xdist>=3.6",
+    "allure-pytest>=2.13",
+    "confluent-kafka>=2.5",
+    "sqlalchemy==2.0.48",
+    "psycopg[binary]>=3.3",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "loguru>=0.7",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.9", "mypy>=1.14", "pydantic-mypy>=0.9"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--alluredir=allure-results -p plugins.logging_plugin -p plugins.allure_plugin"
+markers = [
+    "api: API tests",
+    "web: Web tests",
+    "mobile: Mobile tests",
+    "smoke: Smoke tests",
+]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true

@@ -1,0 +1,28 @@
+# HTTP
+requests>=2.32.0
+
+# Web automation
+playwright>=1.50.0
+
+# Mobile automation
+appium-python-client>=4.3.0
+
+# Testing framework
+pytest>=8.3.0
+pytest-xdist>=3.6.0
+
+# Allure reporting
+allure-pytest>=2.13.0
+
+# Database (SQLAlchemy 2.0 with psycopg3 backend)
+sqlalchemy==2.0.48
+psycopg[binary]>=3.3.3
+
+# Configuration & validation
+pydantic>=2.10.0
+pydantic-settings>=2.7.0
+
+# Logging
+loguru>=0.7.0
+
+allure-python-commons

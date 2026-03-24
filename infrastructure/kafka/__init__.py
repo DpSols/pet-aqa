@@ -1,0 +1,2 @@
+class KafkaDeliveryError(Exception):
+    pass
